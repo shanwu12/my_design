@@ -14,8 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   cmake_modules
+  message_generation
 )
-find_package(Eigen REQUIRED)
+#find_package(Eigen REQUIRED)
 
 
 ## find pid lib
@@ -62,6 +63,12 @@ include_directories("${PROJECT_SOURCE_DIR}/src/PID_lib")
 #   Message2.msg
 # )
 
+ add_message_files(
+   FILES
+   pid_ctrl_data.msg
+   move_target.msg
+ )
+
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -77,10 +84,11 @@ include_directories("${PROJECT_SOURCE_DIR}/src/PID_lib")
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs  # Or other packages containing msgs
+   geometry_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -111,11 +119,18 @@ include_directories("${PROJECT_SOURCE_DIR}/src/PID_lib")
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+#generate_messages(
+#DEPENDENCIES
+#std_msg
+#geometry_msgs
+#)
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES dji_sdk_control
 #  CATKIN_DEPENDS dji_sdk roscpp
 #  DEPENDS system_lib
+   CATKIN_DEPENDS message_runtime
 )
 
 ###########
@@ -131,11 +146,9 @@ include_directories(
 )
 
 ## Generate messages in the 'msg' folder
- add_message_files(
-   FILES
-   pid_ctrl_data.msg
-   move_target.msg
- )
+
+
+
 
 ## Declare a C++ library
 # add_library(dji_sdk_control
@@ -150,13 +163,14 @@ include_directories(
 ## Declare a C++ executable
 add_executable(dji_sdk_control_node src/control_node.cpp)
 add_executable(pid_ctrl_node src/control_pid.cpp ${MY_PID_LIB_SOURCES})
-#add_executable(dji_sdk_control_pid src/control_pid.cpp)
 
+
+#add_executable(dji_sdk_control_pid src/control_pid.cpp)
 #add_executable(pid_ctrl_node src/pid_controller.cpp ${MY_PID_LIB_SOURCES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(dji_sdk_control_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(dji_sdk_control_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 #target_link_libraries(pid_ctrl_node ${catkin_LIBRARIES} )
@@ -170,6 +184,8 @@ target_link_libraries(pid_ctrl_node ${catkin_LIBRARIES} )
 #  ${catkin_LIBRARIES}
 #  ${Eigen_LIBRARIES}
 #)
+
+#add_dependencies(dji_sdk_control_node dji_sdk_generate_messages_cpp)
 
 #############
 ## Install ##

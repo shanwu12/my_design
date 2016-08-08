@@ -6,8 +6,8 @@
 #include <std_msgs/UInt8.h>
 #include "PID_lib/pid.h"
 
-#include "demo_flight/pid_ctrl_data.h"
-#include "demo_flight/ekf_data.h"
+//#include "demo_flight/pid_ctrl_data.h"
+//#include "demo_flight/ekf_data.h"
 
 using namespace std;
 using namespace ros;

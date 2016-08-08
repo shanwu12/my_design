@@ -5,7 +5,7 @@
 #include <dji_sdk/dji_drone.h>
 #include <std_msgs/UInt8.h>
 #include "PID_lib/pid.h"
-#include "demo_flight/pid_ctrl_data.h"
+#include "dji_sdk_control/pid_ctrl_data.h"
 
 using namespace std;
 using namespace ros;
@@ -22,11 +22,11 @@ PID *ctrl_y;
 PID *ctrl_z;
 PID *ctrl_yaw;
 
-double Kp_pos = 0.8;
+double Kp_pos = 0.2;
 double Ki_pos = 0.0;
 double Kd_pos = 0.0;
 
-double Kp_height = 0.5;
+double Kp_height = 0.2;
 double Ki_height = 0.0;
 double Kd_height = 0.0;
 
@@ -35,34 +35,34 @@ double Ki_yaw = 0.0;
 double Kd_yaw = 0.0;
 
 float ctrl_data[4] = {0,0,0,0};
-float target_position[3] = {0,0,2};
+float target_position[3] = {1,0,1};
 float target_yaw = 0;
 
 float dt = 0.01;
 float first_time = 0.0;
 
-double pid_ctrl_limit = 0.2;
-double pid_ctrl_limit_vert = 0.2;
+double pid_ctrl_limit = 0.1;
+double pid_ctrl_limit_vert = 0.1;
 double pid_yaw_limit = 5;
-
 
 void guidance_odometry_callback(const nav_msgs::Odometry& guidance_odometry) {
     /* Publish the output control velocity from PID controller */
     dt = guidance_odometry.header.stamp.toSec() - first_time;
     first_time = guidance_odometry.header.stamp.toSec();
 
-//    ctrl_data[0] = target_position[0];
-//    ctrl_x->set_point(target_position[0]);
-//    ctrl_y->set_point(target_position[1]);
-//    ctrl_z->set_point(target_position[1]);
-//    ctrl_yaw->set_point(0);
+    ctrl_data[0] = target_position[0];
+    ctrl_x->set_point(target_position[0]);
+    ctrl_y->set_point(target_position[1]);
+    ctrl_z->set_point(target_position[2]);
+    ctrl_yaw->set_point(0);
 
+    //ROS_INFO("GU_Z=%f",guidance_odometry.pose.pose.position.z);
+    cout<<"GU_Z=%f"<<guidance_odometry.pose.pose.position.z<<endl;
     ctrl_data[0] = ctrl_x -> update(guidance_odometry.pose.pose.position.x, dt);
     ctrl_data[1] = ctrl_y -> update(guidance_odometry.pose.pose.position.y, dt);
-    ctrl_data[2] = target_position[2]; // position control logic for z-axis
+    ctrl_data[2] = ctrl_z -> update(guidance_odometry.pose.pose.position.z, dt); //target_position[2]; // position control logic for z-axis
     ctrl_data[3] = 0; //yaw
- //   ROS_INFO("ctrl_x=%f",ctrl_x);
-    ROS_INFO("ctrl_x=%f",ctrl_data[0]);
+    //ROS_INFO("ctrl_x=%f",ctrl_x);
 
     if (ctrl_data[0] > pid_ctrl_limit)
         ctrl_data[0] = pid_ctrl_limit;
@@ -75,11 +75,27 @@ void guidance_odometry_callback(const nav_msgs::Odometry& guidance_odometry) {
     if (ctrl_data[1] < -pid_ctrl_limit)
         ctrl_data[1] = -pid_ctrl_limit;
 
+    if (ctrl_data[2] > pid_ctrl_limit)
+        ctrl_data[2] = pid_ctrl_limit;
+    if (ctrl_data[2] < -pid_ctrl_limit)
+        ctrl_data[2] = -pid_ctrl_limit;
+
+    ROS_INFO("ctrl_x=%f",ctrl_data[0]);
+    //ROS_INFO("ctrl_y=%f",ctrl_data[1]);
+    ROS_INFO("ctrl_z=%f",ctrl_data[2]);
+    //ROS_INFO("ctrl_yaw=%f",ctrl_data[3]);
+
     geometry_msgs::Vector3 velocity;
 
-    velocity.x = 0.0;
-    velocity.y = 0.0;
-    velocity.z = 0.2;
+    velocity.x = ctrl_data[0];
+    velocity.y = ctrl_data[1];
+    velocity.z = ctrl_data[2];
+
+    if(guidance_odometry.pose.pose.position.z > 1.5)
+    {
+        velocity.z = 0;
+    }
+
     cout<<"control_pid"<<endl;
     ctrl_vel_pub.publish(velocity);
 }
@@ -117,9 +133,10 @@ int main(int argc, char **argv)
     while(ros::ok())
     {
         guidance_bias_pub.publish(bias_correct_msg);
-        cout << "init success!"<<endl;
+ //       cout << "init success!"<<endl;
         loop_rate.sleep();
         ros::spinOnce();
     }
     return 0;
 }
+
