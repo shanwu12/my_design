@@ -11,8 +11,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define LED1             GPIO_Pin_6
-#define LED2             GPIO_Pin_7
+#define LED1             GPIO_Pin_4
+#define LED2             GPIO_Pin_5
 #define LED_PORT        GPIOB
 #define LED_GPIO_CLOCK  RCC_AHB1Periph_GPIOB
 /* Private macro -------------------------------------------------------------*/
@@ -66,7 +66,7 @@ int main(void)
      
   TIM3_Int_Init(10000,84-1);// 10ms
   TIM4_Init();
-  print("\r\n Start - pbdr BM app !!!!!!!\r\n");
+//  print("\r\n Start - pbdr BM app !!!!!!!\r\n");
   Delay(5);    
   /* Infinite loop */
   while (1)
